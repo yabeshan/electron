@@ -302,7 +302,7 @@ step-setup-goma-for-build: &step-setup-goma-for-build
       if [ "`uname`" == "Linux" ]; then
         echo 'export NUMBER_OF_NINJA_PROCESSES=300' >> $BASH_ENV
       else
-        if [ -f ".have-src-cache" ]; then
+        if [ "$HAVE_SRC_CACHE" == "true" ]; then
           echo 'export NUMBER_OF_NINJA_PROCESSES=50' >> $BASH_ENV
         else
           echo 'export NUMBER_OF_NINJA_PROCESSES=25' >> $BASH_ENV
@@ -1092,6 +1092,15 @@ step-ts-compile: &step-ts-compile
       ninja -C out/Default electron:default_app_js -j $NUMBER_OF_NINJA_PROCESSES
       ninja -C out/Default electron:electron_js2c -j $NUMBER_OF_NINJA_PROCESSES
 
+step-check-for-src-cache: &step-check-for-src-cache
+  run:
+    name: Check if src has been populated from the cache
+    command: |
+      if [ -f ".have-src-cache" ]; then
+        rm .have-src-cache
+        echo 'export HAVE_SRC_CACHE=true' >> $BASH_ENV
+      fi
+
 # Lists of steps.
 steps-lint: &steps-lint
   steps:
@@ -1428,6 +1437,7 @@ commands:
             fi
   checkout-from-cache:
     steps:
+      - *step-check-for-src-cache
       - *step-checkout-electron
       - *step-maybe-early-exit-doc-only-change
       - *step-depot-tools-get
