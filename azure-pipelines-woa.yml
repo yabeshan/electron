@@ -85,8 +85,6 @@ steps:
     echo "Verifying non proprietary ffmpeg"
     python electron\script\verify-ffmpeg.py --build-dir out\Default --source-root %cd% --ffmpeg-path out\ffmpeg
   displayName: 'Verify ffmpeg'
-  env:
-    TARGET_ARCH: arm64
 
 - powershell: |
     Get-Process | Where Name –Like "electron*" | Stop-Process
