@@ -1056,23 +1056,23 @@ step-check-for-doc-only-change: &step-check-for-doc-only-change
       node script/yarn install --frozen-lockfile
       if node script/doc-only-change.js --prNumber=$CIRCLE_PR_NUMBER --prURL=$CIRCLE_PULL_REQUEST --prBranch=$CIRCLE_BRANCH; then
         #PR is doc only change; save file with value true to indicate doc only change
-        echo "true" > .skip-ci-build
+        echo "true" > ../../.skip-ci-build
       else
         #PR is not a doc only change; create empty file to indicate check has been done
-        touch .skip-ci-build
+        touch ../../.skip-ci-build
       fi
 
 step-persist-doc-only-change: &step-persist-doc-only-change
   persist_to_workspace:
     root: .
     paths:
-      - src/electron/.skip-ci-build
+      - .skip-ci-build
 
 step-maybe-early-exit-doc-only-change: &step-maybe-early-exit-doc-only-change
   run:
     name: Shortcircuit build if doc only change
     command: |
-      if [ -s src/electron/.skip-ci-build ]; then
+      if [ -s .skip-ci-build ]; then
         circleci-agent step halt
       fi
 
@@ -1080,7 +1080,7 @@ step-maybe-early-exit-no-doc-change: &step-maybe-early-exit-no-doc-change
   run:
     name: Shortcircuit job if change is not doc only
     command: |
-      if [ ! -s src/electron/.skip-ci-build ]; then
+      if [ ! -s .skip-ci-build ]; then
         circleci-agent step halt
       fi
 
@@ -1438,8 +1438,8 @@ commands:
   checkout-from-cache:
     steps:
       - *step-check-for-src-cache
-      - *step-checkout-electron
       - *step-maybe-early-exit-doc-only-change
+      - *step-checkout-electron
       - *step-depot-tools-get
       - *step-depot-tools-add-to-path
       - *step-generate-deps-hash
