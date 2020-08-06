@@ -302,7 +302,11 @@ step-setup-goma-for-build: &step-setup-goma-for-build
       if [ "`uname`" == "Linux" ]; then
         echo 'export NUMBER_OF_NINJA_PROCESSES=300' >> $BASH_ENV
       else
-        echo 'export NUMBER_OF_NINJA_PROCESSES=25' >> $BASH_ENV
+        if [ -f ".have-src-cache" ]; then
+          echo 'export NUMBER_OF_NINJA_PROCESSES=50' >> $BASH_ENV
+        else
+          echo 'export NUMBER_OF_NINJA_PROCESSES=25' >> $BASH_ENV
+        fi
       fi
       if [ ! -z "$RAW_GOMA_AUTH" ]; then
         echo $RAW_GOMA_AUTH > ~/.goma_oauth2_config
@@ -1398,6 +1402,16 @@ commands:
           steps:
             - *step-maybe-restore-src-cache-marker
             - run:
+                name: Create a marker to indicate we have a src cache
+                command: |
+                  if [ -f ".src-cache-marker" ]; then
+                    touch .have-src-cache
+                  fi
+            - persist_to_workspace:
+                root: .
+                paths:
+                  - .have-src-cache
+            - run:
                 name: Halt the job early if the src cache exists
                 command: |
                   if [ -f ".src-cache-marker" ]; then
@@ -2105,7 +2119,7 @@ jobs:
           persist: true
           checkout: false
           checkout-and-assume-cache: true
-          attach: false
+          attach: true
 
   osx-testing-x64-gn-check:
     <<: *machine-mac
@@ -2195,7 +2209,7 @@ jobs:
           persist: true
           checkout: false
           checkout-and-assume-cache: true
-          attach: false
+          attach: true
 
   mas-testing-x64:
     <<: *machine-mac-large
@@ -2211,7 +2225,7 @@ jobs:
           persist: true
           checkout: false
           checkout-and-assume-cache: true
-          attach: false
+          attach: true
 
   mas-testing-x64-gn-check:
     <<: *machine-mac
@@ -2305,7 +2319,7 @@ jobs:
           persist: true
           checkout: false
           checkout-and-assume-cache: true
-          attach: false
+          attach: true
 
   # Layer 3: Tests.
   linux-x64-unittests:
