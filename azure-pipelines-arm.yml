@@ -17,6 +17,7 @@ steps:
     node script/download-circleci-artifacts.js --buildNum=$CIRCLE_BUILD_NUM --name=dist.zip --dest=$ZIP_DEST
     cd $ZIP_DEST
     unzip -o dist.zip
+    xattr -cr $ZIP_DEST/Electron.app
   displayName: 'Download and unzip dist files for test'
   env:
     CIRCLE_TOKEN: $(CIRCLECI_TOKEN)
