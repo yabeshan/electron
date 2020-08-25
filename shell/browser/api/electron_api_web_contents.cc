@@ -1116,7 +1116,8 @@ void WebContents::DidStopLoading() {
 
 bool WebContents::EmitNavigationEvent(
     const std::string& event,
-    content::NavigationHandle* navigation_handle) {
+    content::NavigationHandle* navigation_handle,
+    gin_helper::Event::ValueCallback callback) {
   bool is_main_frame = navigation_handle->IsInMainFrame();
   int frame_tree_node_id = navigation_handle->GetFrameTreeNodeId();
   content::FrameTreeNode* frame_tree_node =
@@ -1136,8 +1137,18 @@ bool WebContents::EmitNavigationEvent(
   }
   bool is_same_document = navigation_handle->IsSameDocument();
   auto url = navigation_handle->GetURL();
-  return Emit(event, url, is_same_document, is_main_frame, frame_process_id,
-              frame_routing_id);
+  int code = navigation_handle->GetNetErrorCode();
+  auto description = net::ErrorToShortString(code);
+  return EmitWithSender(event, nullptr, std::move(callback), url,
+                        is_same_document, is_main_frame, frame_process_id,
+                        frame_routing_id, code, description);
+}
+
+bool WebContents::EmitNavigationEvent(
+    const std::string& event,
+    content::NavigationHandle* navigation_handle) {
+  return EmitNavigationEvent(event, navigation_handle,
+                             gin_helper::Event::ValueCallback());
 }
 
 void WebContents::BindElectronBrowser(
@@ -1159,8 +1170,9 @@ void WebContents::Message(bool internal,
   TRACE_EVENT1("electron", "WebContents::Message", "channel", channel);
   // webContents.emit('-ipc-message', new Event(), internal, channel,
   // arguments);
-  EmitWithSender("-ipc-message", receivers_.current_context(), InvokeCallback(),
-                 internal, channel, std::move(arguments));
+  EmitWithSender("-ipc-message", receivers_.current_context(),
+                 gin_helper::Event::ValueCallback(), internal, channel,
+                 std::move(arguments));
 }
 
 void WebContents::Invoke(bool internal,
@@ -1170,7 +1182,9 @@ void WebContents::Invoke(bool internal,
   TRACE_EVENT1("electron", "WebContents::Invoke", "channel", channel);
   // webContents.emit('-ipc-invoke', new Event(), internal, channel, arguments);
   EmitWithSender("-ipc-invoke", receivers_.current_context(),
-                 std::move(callback), internal, channel, std::move(arguments));
+                 gin_helper::Event::AdaptInvokeCallbackToValueCallback(
+                     std::move(callback)),
+                 internal, channel, std::move(arguments));
 }
 
 void WebContents::ReceivePostMessage(const std::string& channel,
@@ -1181,8 +1195,9 @@ void WebContents::ReceivePostMessage(const std::string& channel,
       MessagePort::EntanglePorts(isolate, std::move(message.ports));
   v8::Local<v8::Value> message_value =
       electron::DeserializeV8Value(isolate, message);
-  EmitWithSender("-ipc-ports", receivers_.current_context(), InvokeCallback(),
-                 false, channel, message_value, std::move(wrapped_ports));
+  EmitWithSender("-ipc-ports", receivers_.current_context(),
+                 gin_helper::Event::ValueCallback(), false, channel,
+                 message_value, std::move(wrapped_ports));
 }
 
 void WebContents::PostMessage(const std::string& channel,
@@ -1226,7 +1241,9 @@ void WebContents::MessageSync(bool internal,
   // webContents.emit('-ipc-message-sync', new Event(sender, message), internal,
   // channel, arguments);
   EmitWithSender("-ipc-message-sync", receivers_.current_context(),
-                 std::move(callback), internal, channel, std::move(arguments));
+                 gin_helper::Event::AdaptInvokeCallbackToValueCallback(
+                     std::move(callback)),
+                 internal, channel, std::move(arguments));
 }
 
 void WebContents::MessageTo(bool internal,
@@ -1248,7 +1265,8 @@ void WebContents::MessageHost(const std::string& channel,
   TRACE_EVENT1("electron", "WebContents::MessageHost", "channel", channel);
   // webContents.emit('ipc-message-host', new Event(), channel, args);
   EmitWithSender("ipc-message-host", receivers_.current_context(),
-                 InvokeCallback(), channel, std::move(arguments));
+                 gin_helper::Event::ValueCallback(), channel,
+                 std::move(arguments));
 }
 
 void WebContents::UpdateDraggableRegions(
