@@ -61,7 +61,7 @@ spinning, and the `onload` event was dispatched.
 
 Returns:
 
-* `event` Event
+* `event` [CancellableNavigationEvent](structures/cancellable-navigation-event.md)
 * `url` String
 * `isInPlace` Boolean
 * `isMainFrame` Boolean
@@ -212,7 +212,7 @@ myBrowserWindow.webContents.on('new-window', (event, url, frameName, disposition
 
 Returns:
 
-* `event` Event
+* `event` [CancellableNavigationEvent](structures/cancellable-navigation-event.md)
 * `url` String
 
 Emitted when a user or the page wants to start navigation. It can happen when
