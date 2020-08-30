@@ -330,15 +330,10 @@ NativeWindowViews::~NativeWindowViews() {
 
 void NativeWindowViews::SetGTKDarkThemeEnabled(bool use_dark_theme) {
 #if defined(USE_X11)
-  if (use_dark_theme) {
-    ui::SetStringProperty(static_cast<x11::Window>(GetAcceleratedWidget()),
-                          gfx::GetAtom("_GTK_THEME_VARIANT"),
-                          gfx::GetAtom("UTF8_STRING"), "dark");
-  } else {
-    ui::SetStringProperty(static_cast<x11::Window>(GetAcceleratedWidget()),
-                          gfx::GetAtom("_GTK_THEME_VARIANT"),
-                          gfx::GetAtom("UTF8_STRING"), "light");
-  }
+  char const* const theme_variant = use_dark_theme ? "dark" : "light";
+  ui::SetStringProperty(static_cast<x11::Window>(GetAcceleratedWidget()),
+                        gfx::GetAtom("_GTK_THEME_VARIANT"),
+                        gfx::GetAtom("UTF8_STRING"), theme_variant);
 #endif
 }
 
@@ -1302,6 +1297,13 @@ void NativeWindowViews::SetIcon(const gfx::ImageSkia& icon) {
   auto* tree_host = views::DesktopWindowTreeHostLinux::GetHostForWidget(
       GetAcceleratedWidget());
   tree_host->SetWindowIcons(icon, {});
+}
+#endif
+
+#if defined(OS_LINUX)
+void NativeWindowViews::OnNativeThemeUpdated(ui::NativeTheme* observed_theme) {
+  auto const use_dark = observed_theme->ShouldUseDarkColors();
+  SetGTKDarkThemeEnabled(use_dark);
 }
 #endif
 
