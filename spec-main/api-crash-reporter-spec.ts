@@ -433,6 +433,294 @@ const startServer = async () => {
     })
     crashReporterPort = port
   }
+<<<<<<< HEAD
+||||||| parent of 35b6cdc24 (ci: cleanup up test app directories)
+  const initialFiles = readdirIfPresent(dir);
+  return new Promise(resolve => {
+    const ivl = setInterval(() => {
+      const newCrashFiles = readdirIfPresent(dir).filter(f => !initialFiles.includes(f));
+      if (newCrashFiles.length) {
+        clearInterval(ivl);
+        resolve(newCrashFiles);
+      }
+    }, 1000);
+  });
+}
+
+// TODO(nornagon): Fix tests on linux/arm.
+ifdescribe(!isLinuxOnArm && !process.mas && !process.env.DISABLE_CRASH_REPORTER_TESTS)('crashReporter module', function () {
+  afterEach(cleanup);
+
+  describe('should send minidump', () => {
+    it('when renderer crashes', async () => {
+      const { port, waitForCrash } = await startServer();
+      runCrashApp('renderer', port);
+      const crash = await waitForCrash();
+      checkCrash('renderer', crash);
+      expect(crash.mainProcessSpecific).to.be.undefined();
+    });
+
+    it('when sandboxed renderer crashes', async () => {
+      const { port, waitForCrash } = await startServer();
+      runCrashApp('sandboxed-renderer', port);
+      const crash = await waitForCrash();
+      checkCrash('renderer', crash);
+      expect(crash.mainProcessSpecific).to.be.undefined();
+    });
+
+    // TODO(nornagon): Minidump generation in main/node process on Linux/Arm is
+    // broken (//components/crash prints "Failed to generate minidump"). Figure
+    // out why.
+    ifit(!isLinuxOnArm)('when main process crashes', async () => {
+      const { port, waitForCrash } = await startServer();
+      runCrashApp('main', port);
+      const crash = await waitForCrash();
+      checkCrash('browser', crash);
+      expect(crash.mainProcessSpecific).to.equal('mps');
+    });
+
+    ifit(!isLinuxOnArm)('when a node process crashes', async () => {
+      const { port, waitForCrash } = await startServer();
+      runCrashApp('node', port);
+      const crash = await waitForCrash();
+      checkCrash('node', crash);
+      expect(crash.mainProcessSpecific).to.be.undefined();
+      expect(crash.rendererSpecific).to.be.undefined();
+    });
+
+    describe('with guid', () => {
+      for (const processType of ['main', 'renderer', 'sandboxed-renderer']) {
+        it(`when ${processType} crashes`, async () => {
+          const { port, waitForCrash } = await startServer();
+          runCrashApp(processType, port);
+          const crash = await waitForCrash();
+          expect(crash.guid).to.be.a('string');
+        });
+      }
+
+      it('is a consistent id', async () => {
+        let crash1Guid;
+        let crash2Guid;
+        {
+          const { port, waitForCrash } = await startServer();
+          runCrashApp('main', port);
+          const crash = await waitForCrash();
+          crash1Guid = crash.guid;
+        }
+        {
+          const { port, waitForCrash } = await startServer();
+          runCrashApp('main', port);
+          const crash = await waitForCrash();
+          crash2Guid = crash.guid;
+        }
+        expect(crash2Guid).to.equal(crash1Guid);
+      });
+    });
+
+    describe('with extra parameters', () => {
+      it('when renderer crashes', async () => {
+        const { port, waitForCrash } = await startServer();
+        runCrashApp('renderer', port, ['--set-extra-parameters-in-renderer']);
+        const crash = await waitForCrash();
+        checkCrash('renderer', crash);
+        expect(crash.mainProcessSpecific).to.be.undefined();
+        expect(crash.rendererSpecific).to.equal('rs');
+        expect(crash.addedThenRemoved).to.be.undefined();
+      });
+
+      it('when sandboxed renderer crashes', async () => {
+        const { port, waitForCrash } = await startServer();
+        runCrashApp('sandboxed-renderer', port, ['--set-extra-parameters-in-renderer']);
+        const crash = await waitForCrash();
+        checkCrash('renderer', crash);
+        expect(crash.mainProcessSpecific).to.be.undefined();
+        expect(crash.rendererSpecific).to.equal('rs');
+        expect(crash.addedThenRemoved).to.be.undefined();
+      });
+
+      it('contains v8 crash keys when a v8 crash occurs', async () => {
+        const { remotely } = await startRemoteControlApp();
+        const { port, waitForCrash } = await startServer();
+
+        await remotely((port: number) => {
+          require('electron').crashReporter.start({
+            submitURL: `http://127.0.0.1:${port}`,
+            ignoreSystemCrashHandler: true
+          });
+        }, [port]);
+
+        remotely(() => {
+          const { BrowserWindow } = require('electron');
+          const bw = new BrowserWindow({ show: false, webPreferences: { nodeIntegration: true } });
+          bw.loadURL('about:blank');
+          bw.webContents.executeJavaScript('process.electronBinding(\'v8_util\').triggerFatalErrorForTesting()');
+        });
+
+        const crash = await waitForCrash();
+        expect(crash.prod).to.equal('Electron');
+        expect(crash._productName).to.equal('remote-control');
+        expect(crash.process_type).to.equal('renderer');
+        expect(crash['electron.v8-fatal.location']).to.equal('v8::Context::New()');
+        expect(crash['electron.v8-fatal.message']).to.equal('Circular extension dependency');
+      });
+    });
+  });
+
+  ifdescribe(!isLinuxOnArm)('extra parameter limits', () => {
+    function stitchLongCrashParam (crash: any, paramKey: string) {
+      if (crash[paramKey]) return crash[paramKey];
+      let chunk = 1;
+      let stitched = '';
+      while (crash[`${paramKey}__${chunk}`]) {
+        stitched += crash[`${paramKey}__${chunk}`];
+        chunk++;
+      }
+      return stitched;
+    }
+=======
+  const initialFiles = readdirIfPresent(dir);
+  return new Promise(resolve => {
+    const ivl = setInterval(() => {
+      const newCrashFiles = readdirIfPresent(dir).filter(f => !initialFiles.includes(f));
+      if (newCrashFiles.length) {
+        clearInterval(ivl);
+        resolve(newCrashFiles);
+      }
+    }, 1000);
+  });
+}
+
+// TODO(nornagon): Fix tests on linux/arm.
+ifdescribe(!isLinuxOnArm && !process.mas && !process.env.DISABLE_CRASH_REPORTER_TESTS)('crashReporter module', function () {
+  afterEach(cleanup);
+
+  describe('should send minidump', () => {
+    it('when renderer crashes', async () => {
+      const { port, waitForCrash } = await startServer();
+      runCrashApp('renderer', port);
+      const crash = await waitForCrash();
+      checkCrash('renderer', crash);
+      expect(crash.mainProcessSpecific).to.be.undefined();
+    });
+
+    it('when sandboxed renderer crashes', async () => {
+      const { port, waitForCrash } = await startServer();
+      runCrashApp('sandboxed-renderer', port);
+      const crash = await waitForCrash();
+      checkCrash('renderer', crash);
+      expect(crash.mainProcessSpecific).to.be.undefined();
+    });
+
+    // TODO(nornagon): Minidump generation in main/node process on Linux/Arm is
+    // broken (//components/crash prints "Failed to generate minidump"). Figure
+    // out why.
+    ifit(!isLinuxOnArm)('when main process crashes', async () => {
+      const { port, waitForCrash } = await startServer();
+      runCrashApp('main', port);
+      const crash = await waitForCrash();
+      checkCrash('browser', crash);
+      expect(crash.mainProcessSpecific).to.equal('mps');
+    });
+
+    ifit(!isLinuxOnArm)('when a node process crashes', async () => {
+      const { port, waitForCrash } = await startServer();
+      runCrashApp('node', port);
+      const crash = await waitForCrash();
+      checkCrash('node', crash);
+      expect(crash.mainProcessSpecific).to.be.undefined();
+      expect(crash.rendererSpecific).to.be.undefined();
+    });
+
+    describe('with guid', () => {
+      for (const processType of ['main', 'renderer', 'sandboxed-renderer']) {
+        it(`when ${processType} crashes`, async () => {
+          const { port, waitForCrash } = await startServer();
+          runCrashApp(processType, port);
+          const crash = await waitForCrash();
+          expect(crash.guid).to.be.a('string');
+        });
+      }
+
+      it('is a consistent id', async () => {
+        let crash1Guid;
+        let crash2Guid;
+        {
+          const { port, waitForCrash } = await startServer();
+          runCrashApp('main', port);
+          const crash = await waitForCrash();
+          crash1Guid = crash.guid;
+        }
+        {
+          const { port, waitForCrash } = await startServer();
+          runCrashApp('main', port);
+          const crash = await waitForCrash();
+          crash2Guid = crash.guid;
+        }
+        expect(crash2Guid).to.equal(crash1Guid);
+      });
+    });
+
+    describe('with extra parameters', () => {
+      it('when renderer crashes', async () => {
+        const { port, waitForCrash } = await startServer();
+        runCrashApp('renderer', port, ['--set-extra-parameters-in-renderer']);
+        const crash = await waitForCrash();
+        checkCrash('renderer', crash);
+        expect(crash.mainProcessSpecific).to.be.undefined();
+        expect(crash.rendererSpecific).to.equal('rs');
+        expect(crash.addedThenRemoved).to.be.undefined();
+      });
+
+      it('when sandboxed renderer crashes', async () => {
+        const { port, waitForCrash } = await startServer();
+        runCrashApp('sandboxed-renderer', port, ['--set-extra-parameters-in-renderer']);
+        const crash = await waitForCrash();
+        checkCrash('renderer', crash);
+        expect(crash.mainProcessSpecific).to.be.undefined();
+        expect(crash.rendererSpecific).to.equal('rs');
+        expect(crash.addedThenRemoved).to.be.undefined();
+      });
+
+      it('contains v8 crash keys when a v8 crash occurs', async () => {
+        const { remotely } = await startRemoteControlApp();
+        const { port, waitForCrash } = await startServer();
+
+        await remotely((port: number) => {
+          require('electron').crashReporter.start({
+            submitURL: `http://127.0.0.1:${port}`,
+            ignoreSystemCrashHandler: true
+          });
+        }, [port]);
+
+        remotely(() => {
+          const { BrowserWindow } = require('electron');
+          const bw = new BrowserWindow({ show: false, webPreferences: { nodeIntegration: true } });
+          bw.loadURL('about:blank');
+          bw.webContents.executeJavaScript('process.electronBinding(\'v8_util\').triggerFatalErrorForTesting()');
+        });
+
+        const crash = await waitForCrash();
+        expect(crash.prod).to.equal('Electron');
+        expect(crash._productName).to.equal('electron-test-remote-control');
+        expect(crash.process_type).to.equal('renderer');
+        expect(crash['electron.v8-fatal.location']).to.equal('v8::Context::New()');
+        expect(crash['electron.v8-fatal.message']).to.equal('Circular extension dependency');
+      });
+    });
+  });
+
+  ifdescribe(!isLinuxOnArm)('extra parameter limits', () => {
+    function stitchLongCrashParam (crash: any, paramKey: string) {
+      if (crash[paramKey]) return crash[paramKey];
+      let chunk = 1;
+      let stitched = '';
+      while (crash[`${paramKey}__${chunk}`]) {
+        stitched += crash[`${paramKey}__${chunk}`];
+        chunk++;
+      }
+      return stitched;
+    }
+>>>>>>> 35b6cdc24 (ci: cleanup up test app directories)
 
   afterTest.push(() => { server.close() })
 
