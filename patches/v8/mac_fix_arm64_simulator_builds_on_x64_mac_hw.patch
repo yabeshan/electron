@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jakob Kummerow <jkummerow@chromium.org>
 Date: Tue, 22 Sep 2020 12:32:02 +0200
-Subject: [mac] Fix arm64 simulator builds on x64 Mac HW
+Subject: Fix arm64 simulator builds on x64 Mac HW
 
 Choose the page size based on V8_HOST_ARCH_ARM64 (i.e. we're building
 an arm64 binary) instead of V8_TARGET_ARCH_ARM64 (i.e. V8's compilers
