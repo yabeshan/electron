@@ -92,6 +92,16 @@ steps:
 
   condition: succeededOrFailed()
 
+- bash: killall Electron || echo "No Electron processes left running"
+  displayName: 'Kill processes left running from last test run'
+  condition: always()
+
+- bash: |
+    rm -rf ~/Library/Application\ Support/Electron*
+    rm -rf ~/Library/Application\ Support/electron*
+  displayName: 'Delete user app data directories'
+  condition: always()
+
 - task: mspremier.PostBuildCleanup.PostBuildCleanup-task.PostBuildCleanup@3
   displayName: 'Clean Agent Directories'
 
