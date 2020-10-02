@@ -185,10 +185,6 @@ const char kNavigateOnDragDrop[] = "navigateOnDragDrop";
 const char kSpellcheck[] = "spellcheck";
 #endif
 
-#if BUILDFLAG(ENABLE_REMOTE_MODULE)
-const char kEnableRemoteModule[] = "enableRemoteModule";
-#endif
-
 const char kEnableWebSQL[] = "enableWebSQL";
 
 const char kEnablePreferredSizeMode[] = "enablePreferredSizeMode";
@@ -296,10 +292,6 @@ const char kDisableNTLMv2[] = "disable-ntlm-v2";
 
 #if BUILDFLAG(ENABLE_BUILTIN_SPELLCHECKER)
 const char kEnableSpellcheck[] = "enable-spellcheck";
-#endif
-
-#if BUILDFLAG(ENABLE_REMOTE_MODULE)
-const char kEnableRemoteModule[] = "enable-remote-module";
 #endif
 
 const char kGlobalCrashKeys[] = "global-crash-keys";

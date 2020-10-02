@@ -135,10 +135,6 @@ require('@electron/internal/browser/devtools');
 // Load the chrome extension support.
 require('@electron/internal/browser/chrome-extension-shim');
 
-if (BUILDFLAG(ENABLE_REMOTE_MODULE)) {
-  require('@electron/internal/browser/remote/server');
-}
-
 // Load protocol module to ensure it is populated on app ready
 require('@electron/internal/browser/api/protocol');
 

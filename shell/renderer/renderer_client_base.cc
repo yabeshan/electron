@@ -133,13 +133,6 @@ void RendererClientBase::DidCreateScriptContext(
       "%s-%" PRId64, renderer_client_id_.c_str(), ++next_context_id_);
   gin_helper::Dictionary global(context->GetIsolate(), context->Global());
   global.SetHidden("contextId", context_id);
-
-#if BUILDFLAG(ENABLE_REMOTE_MODULE)
-  auto* command_line = base::CommandLine::ForCurrentProcess();
-  bool enableRemoteModule =
-      command_line->HasSwitch(switches::kEnableRemoteModule);
-  global.SetHidden("enableRemoteModule", enableRemoteModule);
-#endif
 }
 
 void RendererClientBase::AddRenderBindings(

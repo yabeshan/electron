@@ -343,12 +343,6 @@ void WebContentsPreferences::AppendCommandLineSwitches(
     }
   }
 
-#if BUILDFLAG(ENABLE_REMOTE_MODULE)
-  // Whether to enable the remote module
-  if (IsEnabled(options::kEnableRemoteModule, false))
-    command_line->AppendSwitch(switches::kEnableRemoteModule);
-#endif
-
   // Run Electron APIs and preload script in isolated world
   if (IsEnabled(options::kContextIsolation))
     command_line->AppendSwitch(switches::kContextIsolation);

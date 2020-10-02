@@ -74,10 +74,6 @@ if (BUILDFLAG(ENABLE_DESKTOP_CAPTURER)) {
   });
 }
 
-const isRemoteModuleEnabled = BUILDFLAG(ENABLE_REMOTE_MODULE)
-  ? require('@electron/internal/browser/remote/server').isRemoteModuleEnabled
-  : () => false;
-
 const getPreloadScript = async function (preloadPath: string) {
   let preloadSrc = null;
   let preloadError = null;
@@ -95,7 +91,6 @@ ipcMainUtils.handleSync(IPC_MESSAGES.BROWSER_SANDBOX_LOAD, async function (event
 
   return {
     preloadScripts: await Promise.all(preloadPaths.map(path => getPreloadScript(path))),
-    isRemoteModuleEnabled: isRemoteModuleEnabled(event.sender),
     isWebViewTagEnabled: guestViewManager.isWebViewTagEnabled(event.sender),
     guestInstanceId: webPreferences.guestInstanceId,
     openerId: webPreferences.openerId,

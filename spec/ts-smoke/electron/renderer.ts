@@ -2,7 +2,6 @@
 import {
   desktopCapturer,
   ipcRenderer,
-  remote,
   webFrame,
   clipboard,
   crashReporter,
@@ -22,31 +21,6 @@ ipcRenderer.on('asynchronous-reply', (event, arg: any) => {
 })
 
 ipcRenderer.send('asynchronous-message', 'ping')
-
-// remote
-// https://github.com/electron/electron/blob/master/docs/api/remote.md
-
-const BrowserWindow = remote.BrowserWindow
-const win = new BrowserWindow({ width: 800, height: 600 })
-win.loadURL('https://github.com')
-
-remote.getCurrentWindow().on('close', () => {
-  // blabla...
-})
-
-remote.getCurrentWindow().capturePage().then(image => {
-  fs.writeFile('/tmp/screenshot.png', image.toBitmap(), err => {
-    console.log(err)
-  })
-})
-
-remote.getCurrentWebContents().print()
-
-remote.getCurrentWindow().capturePage().then(image => {
-  remote.require('fs').writeFile('/tmp/screenshot.png', image.toBitmap(), (err: Error) => {
-    console.log(err)
-  })
-})
 
 // web-frame
 // https://github.com/electron/electron/blob/master/docs/api/web-frame.md
@@ -166,12 +140,7 @@ holder.ondrop = function (e) {
 // nativeImage
 // https://github.com/electron/electron/blob/master/docs/api/native-image.md
 
-const Tray = remote.Tray
-const appIcon2 = new Tray('/Users/somebody/images/icon.png')
-const window2 = new BrowserWindow({ icon: '/Users/somebody/images/window.png' })
 const image = clipboard.readImage()
-const appIcon3 = new Tray(image)
-const appIcon4 = new Tray('/Users/somebody/images/icon.png')
 
 // https://github.com/electron/electron/blob/master/docs/api/process.md
 
@@ -186,32 +155,16 @@ process.once('loaded', function () {
 // screen
 // https://github.com/electron/electron/blob/master/docs/api/screen.md
 
-const app = remote.app
+const size = screen.getPrimaryDisplay().workAreaSize
 
-let mainWindow: Electron.BrowserWindow = null
-
-app.whenReady().then(() => {
-  const size = screen.getPrimaryDisplay().workAreaSize
-  mainWindow = new BrowserWindow({ width: size.width, height: size.height })
-})
-
-app.whenReady().then(() => {
-  const displays = screen.getAllDisplays()
-  let externalDisplay: any = null
-  for (const i in displays) {
-    if (displays[i].bounds.x > 0 || displays[i].bounds.y > 0) {
-      externalDisplay = displays[i]
-      break
-    }
+const displays = screen.getAllDisplays()
+let externalDisplay: any = null
+for (const i in displays) {
+  if (displays[i].bounds.x > 0 || displays[i].bounds.y > 0) {
+    externalDisplay = displays[i]
+    break
   }
-
-  if (externalDisplay) {
-    mainWindow = new BrowserWindow({
-      x: externalDisplay.bounds.x + 50,
-      y: externalDisplay.bounds.y + 50
-    })
-  }
-})
+}
 
 // shell
 // https://github.com/electron/electron/blob/master/docs/api/shell.md

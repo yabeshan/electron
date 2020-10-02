@@ -6,7 +6,6 @@ declare var binding: { get: (name: string) => any; process: NodeJS.Process; crea
 declare const BUILDFLAG: (flag: boolean) => boolean;
 
 declare const ENABLE_DESKTOP_CAPTURER: boolean;
-declare const ENABLE_REMOTE_MODULE: boolean;
 declare const ENABLE_VIEWS_API: boolean;
 
 declare namespace NodeJS {

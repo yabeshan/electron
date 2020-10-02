@@ -16,7 +16,6 @@ const inheritedWebPreferences = new Map([
   ['javascript', false],
   ['nativeWindowOpen', true],
   ['nodeIntegration', false],
-  ['enableRemoteModule', false],
   ['sandbox', true],
   ['webviewTag', false],
   ['nodeIntegrationInSubFrames', false],

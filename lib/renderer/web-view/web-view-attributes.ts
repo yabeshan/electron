@@ -259,20 +259,6 @@ class WebPreferencesAttribute extends WebViewAttribute {
   }
 }
 
-class EnableRemoteModuleAttribute extends WebViewAttribute {
-  constructor (webViewImpl: WebViewImpl) {
-    super(WEB_VIEW_CONSTANTS.ATTRIBUTE_ENABLEREMOTEMODULE, webViewImpl);
-  }
-
-  public getValue () {
-    return this.webViewImpl.webviewNode.getAttribute(this.name) !== 'false';
-  }
-
-  public setValue (value: any) {
-    this.webViewImpl.webviewNode.setAttribute(this.name, value ? 'true' : 'false');
-  }
-}
-
 // Sets up all of the webview attributes.
 WebViewImpl.prototype.setupWebViewAttributes = function () {
   this.attributes = {};
@@ -285,7 +271,6 @@ WebViewImpl.prototype.setupWebViewAttributes = function () {
   this.attributes[WEB_VIEW_CONSTANTS.ATTRIBUTE_PLUGINS] = new BooleanAttribute(WEB_VIEW_CONSTANTS.ATTRIBUTE_PLUGINS, this);
   this.attributes[WEB_VIEW_CONSTANTS.ATTRIBUTE_DISABLEWEBSECURITY] = new BooleanAttribute(WEB_VIEW_CONSTANTS.ATTRIBUTE_DISABLEWEBSECURITY, this);
   this.attributes[WEB_VIEW_CONSTANTS.ATTRIBUTE_ALLOWPOPUPS] = new BooleanAttribute(WEB_VIEW_CONSTANTS.ATTRIBUTE_ALLOWPOPUPS, this);
-  this.attributes[WEB_VIEW_CONSTANTS.ATTRIBUTE_ENABLEREMOTEMODULE] = new EnableRemoteModuleAttribute(this);
   this.attributes[WEB_VIEW_CONSTANTS.ATTRIBUTE_PRELOAD] = new PreloadAttribute(this);
   this.attributes[WEB_VIEW_CONSTANTS.ATTRIBUTE_BLINKFEATURES] = new BlinkFeaturesAttribute(this);
   this.attributes[WEB_VIEW_CONSTANTS.ATTRIBUTE_DISABLEBLINKFEATURES] = new DisableBlinkFeaturesAttribute(this);

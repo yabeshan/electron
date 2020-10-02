@@ -490,10 +490,6 @@ WebContents.prototype._init = function () {
   this.getActiveIndex = navigationController.getActiveIndex.bind(navigationController);
   this.length = navigationController.length.bind(navigationController);
 
-  // Every remote callback from renderer process would add a listener to the
-  // render-view-deleted event, so ignore the listeners warning.
-  this.setMaxListeners(0);
-
   // Dispatch IPC messages to the ipc module.
   this.on('-ipc-message' as any, function (this: Electron.WebContents, event: any, internal: boolean, channel: string, args: any[]) {
     if (internal) {
