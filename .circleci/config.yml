@@ -1106,7 +1106,7 @@ step-check-for-src-cache: &step-check-for-src-cache
   run:
     name: Check if src has been populated from the cache
     command: |
-      if [ -f ".have-src-cache" ]; then
+      if [ -s ".have-src-cache" ]; then
         rm .have-src-cache
         echo 'export HAVE_SRC_CACHE=true' >> $BASH_ENV
       fi
@@ -1429,6 +1429,8 @@ commands:
                 name: Create a marker to indicate we have a src cache
                 command: |
                   if [ -f ".src-cache-marker" ]; then
+                    echo "true" > .have-src-cache
+                  else
                     touch .have-src-cache
                   fi
             - persist_to_workspace:
