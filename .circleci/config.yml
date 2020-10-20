@@ -83,6 +83,10 @@ machine-linux-2xlarge: &machine-linux-2xlarge
   <<: *docker-image
   resource_class: 2xlarge+
 
+machine-mac-arm64: &machine-mac-arm64
+  machine: true
+  resource_class: electronjs/macos-arm64
+
 machine-mac: &machine-mac
   macos:
     xcode: "12.2.0"
@@ -146,6 +150,7 @@ env-arm64: &env-arm64
   MKSNAPSHOT_TOOLCHAIN: //build/toolchain/linux:clang_arm64
   BUILD_NATIVE_MKSNAPSHOT: 1
   TARGET_ARCH: arm64
+  NPM_CONFIG_ARCH: arm64
 
 env-mas: &env-mas
   GN_EXTRA_ARGS: 'is_mas_build = true'
@@ -683,6 +688,7 @@ step-persist-data-for-tests: &step-persist-data-for-tests
       - src/electron
       - src/third_party/electron_node
       - src/third_party/nan
+      - src/cross-arch-snapshots
 
 step-electron-dist-unzip: &step-electron-dist-unzip
   run:
@@ -749,7 +755,11 @@ step-verify-mksnapshot: &step-verify-mksnapshot
     name: Verify mksnapshot
     command: |
       cd src
-      python electron/script/verify-mksnapshot.py --source-root "$PWD" --build-dir out/Default
+      if [ "$TARGET_ARCH" == "arm" ] || [ "$TARGET_ARCH" == "arm64" ]; then
+        python electron/script/verify-mksnapshot.py --source-root "$PWD" --build-dir out/Default --snapshot-files-dir $PWD/cross-arch-snapshots
+      else
+        python electron/script/verify-mksnapshot.py --source-root "$PWD" --build-dir out/Default
+      fi
 
 step-verify-chromedriver: &step-verify-chromedriver
   run:
@@ -1336,8 +1346,13 @@ steps-tests: &steps-tests
           ELECTRON_DISABLE_SECURITY_WARNINGS: 1
         command: |
           cd src
-          (cd electron && node script/yarn test --runners=main --trace-uncaught --enable-logging --files $(circleci tests glob spec-main/*-spec.ts | circleci tests split))
-          (cd electron && node script/yarn test --runners=remote --trace-uncaught --enable-logging --files $(circleci tests glob spec/*-spec.js | circleci tests split))
+          if [ "$TARGET_ARCH" == "arm" ] || [ "$TARGET_ARCH" == "arm64" ]; then
+            (cd electron && node script/yarn test --runners=main --trace-uncaught --enable-logging)
+            (cd electron && node script/yarn test --runners=remote --trace-uncaught --enable-logging)
+          else
+            (cd electron && node script/yarn test --runners=main --trace-uncaught --enable-logging --files $(circleci tests glob spec-main/*-spec.ts | circleci tests split))
+            (cd electron && node script/yarn test --runners=remote --trace-uncaught --enable-logging --files $(circleci tests glob spec/*-spec.js | circleci tests split))
+          fi
     - run:
         name: Check test results existence
         command: |
@@ -2212,7 +2227,6 @@ jobs:
       <<: *env-ninja-status
       <<: *env-macos-build
       <<: *env-apple-silicon
-      TRIGGER_ARM_TEST: true
       GCLIENT_EXTRA_ARGS: '--custom-var=checkout_mac=True --custom-var=host_os=mac'
     steps:
       - electron-build:
@@ -2322,7 +2336,6 @@ jobs:
       <<: *env-ninja-status
       <<: *env-macos-build
       <<: *env-mas-apple-silicon
-      TRIGGER_ARM_TEST: true
       GCLIENT_EXTRA_ARGS: '--custom-var=checkout_mac=True --custom-var=host_os=mac'
     steps:
       - electron-build:
@@ -2460,6 +2473,13 @@ jobs:
       <<: *env-mac-large
       <<: *env-stack-dumping
     parallelism: 2
+    <<: *steps-tests
+
+  osx-testing-arm64-tests:
+    <<: *machine-mac-arm64
+    environment:
+      <<: *env-arm64
+      <<: *env-stack-dumping
     <<: *steps-tests
 
   osx-release-x64-tests:
@@ -2710,6 +2730,10 @@ workflows:
       - osx-testing-arm64:
           requires:
             - mac-checkout-and-save-cache
+
+      - osx-testing-arm64-tests:
+          requires:
+            - osx-testing-arm64
 
       - mas-testing-x64:
           requires:
