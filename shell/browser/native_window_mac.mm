@@ -349,6 +349,8 @@ void ViewDidMoveToSuperview(NSView* self, SEL _cmd) {
 NativeWindowMac::NativeWindowMac(const gin_helper::Dictionary& options,
                                  NativeWindow* parent)
     : NativeWindow(options, parent), root_view_(new RootViewMac(this)) {
+  ui::NativeTheme::GetInstanceForNativeUi()->AddObserver(this);
+
   int width = 800, height = 600;
   options.Get(options::kWidth, &width);
   options.Get(options::kHeight, &height);
@@ -534,9 +536,12 @@ NativeWindowMac::NativeWindowMac(const gin_helper::Dictionary& options,
   original_level_ = [window_ level];
 }
 
-NativeWindowMac::~NativeWindowMac() {
-  if (wheel_event_monitor_)
-    [NSEvent removeMonitor:wheel_event_monitor_];
+NativeWindowMac::~NativeWindowMac() {}
+
+void NativeWindowMac::Cleanup() {
+  DCHECK(!IsClosed());
+  ui::NativeTheme::GetInstanceForNativeUi()->RemoveObserver(this);
+  [NSEvent removeMonitor:wheel_event_monitor_];
 }
 
 void NativeWindowMac::RedrawTrafficLights() {
