@@ -330,10 +330,15 @@ NativeWindowViews::~NativeWindowViews() {
 
 void NativeWindowViews::SetGTKDarkThemeEnabled(bool use_dark_theme) {
 #if defined(USE_X11)
-  char const* const theme_variant = use_dark_theme ? "dark" : "light";
-  ui::SetStringProperty(static_cast<x11::Window>(GetAcceleratedWidget()),
-                        gfx::GetAtom("_GTK_THEME_VARIANT"),
-                        gfx::GetAtom("UTF8_STRING"), theme_variant);
+  if (use_dark_theme) {
+    ui::SetStringProperty(static_cast<x11::Window>(GetAcceleratedWidget()),
+                          gfx::GetAtom("_GTK_THEME_VARIANT"),
+                          gfx::GetAtom("UTF8_STRING"), "dark");
+  } else {
+    ui::SetStringProperty(static_cast<x11::Window>(GetAcceleratedWidget()),
+                          gfx::GetAtom("_GTK_THEME_VARIANT"),
+                          gfx::GetAtom("UTF8_STRING"), "light");
+  }
 #endif
 }
 
